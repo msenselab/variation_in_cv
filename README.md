@@ -1,2 +1,7 @@
-# variation_in_cv
-Variation in the coefficient of variation
+# Variation in the 'coefficient of variation': rethinking the violation of the scalar proerpty in time-duration judgments
+
+This is the repository for the study "Variation in the 'coefficient of variation': rethinking the violation of the scalar proerpty in time-duration judgments", Yue Ren, Fredrik Allenmark, Hermann J. Müller, Zhuanghua Shi
+
+## Abstract
+
+The coefficient of variation (CV), also known as relative standard deviation, has been used to measure the constancy of Weber’s fraction, a key signature of efficient neural coding in time perception. It has long been debated whether or not duration judgments follow Weber's law, with arguments based on examinations of the CV. However, what has been (largely) ignored in this debate is that the observed CVs may be modulated by temporal context and decision uncertainty, thus questioning conclusions based on this measure. Here, we used a temporal reproduction paradigm to examine the variation of the CVs with two types of temporal contexts: full-range mixed vs. sub-range blocked intervals, separately for intervals presented in the visual and auditory modalities. We found strong contextual modulation of both interval-duration reproductions and the observed CVs. We then applied a two-stage Bayesian model to predict those variations. Without assuming violation of the constancy of Weber’s fraction, our model successfully predicted the central-tendency effect and the variation in the CV. Our findings and modeling results indicate that both the accuracy and precision of our timing behavior are highly dependent on the temporal context and decision uncertainty. And, critically, they advise caution with variations of the CV to reject the constancy of Weber’s fraction of duration estimation. 
