@@ -1,6 +1,8 @@
 # Main Codes for figure plots from Figs 3 to 6
 ## ----- load rawdata and install necessary packages ----
 source('loadPackages.R')
+# change the colour pairs used in the bar figures
+myPairs <- brewer.pal(9, "Paired")[c(6,2,5,1)]
 # load raw data (after filtering out outliers)
 vdat = read.csv("vdata.csv", header = TRUE)
 ## ---- prepare mean data ----
@@ -62,7 +64,7 @@ fig_rre <- ggplot(mRepr, aes(x=duration, y = mRRE, colour= design))+
 data_mean_slope <- slope_estimation(msRepr,'mRepr ~ duration')
 data_mean_slope$regindex <- 1-data_mean_slope$slope
 
-fig_ri <-data_mean_slope %>% 
+fig_ri <- data_mean_slope %>% 
   group_by(exp) %>% 
   summarise(mslope = mean(slope),
             mregindex = mean(regindex),
@@ -83,7 +85,7 @@ fig_ri <-data_mean_slope %>%
               y_position = 0.45) +
   ylim(0,0.65)+
   ylab('Regression Index') +
-  xlab('')
+  xlab('Condition')
 # ---- Figure 5: CVs ----
 data = msRepr
 data_m = data %>% 
@@ -145,10 +147,12 @@ Fig_meanslopes <- ggplot( data_cv_mslope, aes(x =exp, y = mslope, fill = exp)) +
   legend_pos("null") +
   scale_colour_manual(values = myPairs) +
   scale_fill_manual(values = myPairs) +
-  xlab('') +
+  xlab('Condition') +
  # ylim(c(0,0.057))+
   ylab('CV Slopes ')
 
 
-
-
+# ---- (New) Figure 2 ----
+fig2_new <- plot_grid(fig_rre, fig_ri, nrow =1,rel_widths = c(2,1), labels = c('A','B'))
+# ---- (New) Figure 3 ----
+fig3_new <- plot_grid(Fig_cv_model, Fig_meanslopes, nrow =1,rel_widths = c(2,1), labels = c('A','B'))
