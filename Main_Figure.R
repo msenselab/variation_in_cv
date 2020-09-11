@@ -107,7 +107,7 @@ Figure2 <-
 # configurations of the subplot titles
 cv.labs <- as_labeller( c('Aud'='Audition', 'Vis'='Vision'))
 
-# Figure 3 A&B
+# Figure 3 A
 figure3_cv <-
   ggplot(data= mRepr, aes(x= duration, y = mCV, colour= Design))+  
   #mean points
@@ -137,7 +137,7 @@ figure3_cv <-
         axis.ticks = element_line(color = "grey")
   )
 
-# Figure 3 C: CV slopes
+# Figure 3 B
 # prepare dataset
 data_cv_slope <- slope_estimation(msRepr,'cv ~ log_dur')
 data_cv_mslope <- data_cv_slope %>% 
@@ -178,13 +178,13 @@ Fig_meanslopes <- ggplot(data_cv_mslope, aes(x =Experiment, y = mslope)) +
 
 Fig_meanslopes_mid <- plot_grid(NULL,Fig_meanslopes, NULL, nrow =3,rel_widths = c(1,10,1))
 
-# Figure 3: all three panels.
-# panels A&B: Mean CVs (colored dots) as a function of the sample duration, 
+# Figure 3
+# panels A: Mean CVs (colored dots) as a function of the sample duration, 
 # separately for the auditory (left panel) and visual (right panel) sessions. 
 # The smaller colored dots along the vertical line centered on each sample duration represent the CVs of individual participants. 
 # The colored lines represent model fittings using the proposed Bayesian-Estimator model. 
 # Red dots (lines) indicate the ‘block(ed)’ condition and cyan dots (lines) the ‘mix(ed)’ condition. 
-# panel C: Mean Slopes of the CV as a linear function of logarithmic duration, for the four experiments. 
+# panel B: Mean Slopes of the CV as a linear function of logarithmic duration, for the four experiments. 
 # Error bars indicate one standard error. 
 # The slope was obtained by estimating parameter b of the linear function CV = a + b(Duration)
 
