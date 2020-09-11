@@ -1,3 +1,16 @@
+# Codes for the Bayesian model fitting and model comparison
+# The model assumes that Bayesian integration happens on a logarithmic scale representation
+# of the durations, followed by a transformation back to linear scale for the reproduction
+# during which some additional decision and motor noise is introduced. The Bayesian integration
+# on logarithmic scale on its own would predict constant CV, but the introduction of additional
+# duration-independent noise after transforming back to linear scale results in the predicted
+# CV being larger for the shortest durations.
+#
+# For the blocked condition there is additionally a model comparison between 32 different
+# models which differ in terms of whether sig_p, sig_s, sig_m and res can differ between short, 
+# medium and long duration blocks as well as in whether the bias "res" is added as a shift of 
+# the mean of the prior, or later as a bias of the reproduction
+
 ## ----- Prepare all necessary data  ----
 # This chunk of codes can also be found in the  'Main_Figure.R' with more detailed comments.
 # The repetition is included for the code to be run independently.
@@ -74,6 +87,9 @@ for(i in 1:l){
   }
 }
 
+# This function calculates the mean duration according to Bayesian integration with 
+# M_p as the empirical mean of the prior, res as a bias of the mean of the subjective prior,
+# and sp2 and st2 as the variances of the prior and the likelihood respectively
 Bayesian_mdur <- function(t, par) {
   
   sp2 <- par[1]^2
@@ -84,6 +100,7 @@ Bayesian_mdur <- function(t, par) {
   
 }
 
+# This function calculates the standard deviation of the posterior distribution
 Bayesian_vdur <- function(sig_p, sig_t) {
   
   sp2 <- sig_p^2
@@ -124,6 +141,9 @@ Bayesian_pre_fit <- function(par, data) {
   return(a)
 }
 
+# Fit the full distribution. Parameters are the same as for the Bayesian_mdur function above,
+# plus the additional parameter sig_m which is the stimulus independent component to the 
+# variance, which could represent motor noise and decision noise during the reproduction stage
 Bayesian_mixed_fit <- function(par, data) {
   
   t <- log(data$duration)
@@ -326,6 +346,8 @@ for(i in c(1,3)){
 # each block requires one mean value
 # ---- Build up 3-prior Models(Bayesian and linear) ----
 
+# Same as Bayesian_mdur except that the mean of the prior and the bias to the mean of the 
+# subjective prior (res) can differ between blocks
 Bayesian_mdur_block <- function(t, block, sig_p, sig_t, res) {
   
   sp2 <- sig_p^2
@@ -335,6 +357,8 @@ Bayesian_mdur_block <- function(t, block, sig_p, sig_t, res) {
   
 }
 
+# Same as the Bayesian_vdur for the mixed condition model. 
+# Repeated here so that the code for the blocked condition model can be run on its own.
 Bayesian_vdur <- function(sig_p, sig_t) {
   
   sp2 <- sig_p^2
@@ -347,11 +371,17 @@ Bayesian_vdur <- function(sig_p, sig_t) {
 # On log scale the model predicts constant SD. This function translates that into an SD on linear
 # scale, i.e. to the SD of the log-normal distribution 
 # (not the sigma parameter but the actual SD of the distibution).
+# Same as for the mixed condition model. 
+# Repeated here so that the code for the blocked condition model can be run on its own.
 predicted_linear_scale_sd <- function(mu, sigma) {
   s <- sqrt((exp(sigma^2)-1)*exp(2*mu+sigma^2))
 }
 
 # Fit a straight line in log-space to get good starting parameters for the full fit
+# The "model" parameter specificies which version of the model to run
+# Different versions differ in whether sig_p, sig_s, sig_m and res can differ between short, 
+# medium and long duration blocks as well as in whether the bias res is added as a shift of 
+# the mean of the prior, or later as a bias of the reproduction
 Bayesian_pre_fit_block <- function(par, model, data) {
   
   t <- log(data$duration)
@@ -406,6 +436,7 @@ Bayesian_pre_fit_block <- function(par, model, data) {
   return(a)
 }
 
+# Full model fit for the blocked condition
 Bayesian_mixed_fit_block <- function(par, model, data) {
   
   t <- log(data$duration)
@@ -664,6 +695,7 @@ pred_sep_block <-  predictions_block %>% group_by(exp, x, model) %>%
 fit_summary <- group_by(fit_para_block, model) %>% summarize(mBIC=mean(BIC)) %>% arrange(mBIC)
 top_mod <- fit_summary[1,]$model
 
+# Plot figures with data and model predictions 
 for(i in c(2,4)) {
   
   data_model = data %>% filter(exp == exp_name[i])

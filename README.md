@@ -10,4 +10,14 @@ _This is the repository for the study "Variation in the 'coefficient of variatio
 
 3. The whole procedure of the model fitting can be found in 'Bayesian_model_final.R', which can also be run independently. 
 
+The model assumes that Bayesian integration happens on a logarithmic scale representation
+of the durations, followed by a transformation back to linear scale for the reproduction
+during which some additional decision and motor noise is introduced. The Bayesian integration
+on logarithmic scale on its own would predict constant CV, but the introduction of additional
+duration-independent noise after transforming back to linear scale results in the predicted
+CV being larger for the shortest durations.
 
+For the blocked condition there is additionally a model comparison between 32 different
+models which differ in terms of whether sig_p, sig_s, sig_m and res can differ between short, 
+medium and long duration blocks as well as in whether the bias "res" is added as a shift of 
+the mean of the prior, or later as a bias of the reproduction
