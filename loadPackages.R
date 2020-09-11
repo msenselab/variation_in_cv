@@ -11,8 +11,8 @@ usePackage(c('knitr','R.matlab','data.table','xtable','dplyr','tidyr',
 library(RColorBrewer)
 library(tidyverse)
 library(ggsignif)
+library(lemon)
 
-myPairs <- brewer.pal(9, "Paired")[c(6,5,2,1)]
 
 options(digits=3)
 
