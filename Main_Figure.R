@@ -1,8 +1,8 @@
 # Main Codes of figure plots for Figure 2 and 3.
 # ----- Install all necessary packages and functions ----
-source('Codes/loadPackages.R')
+source('loadPackages.R')
 # load data from 4 experiments  
-vdat = read.csv("Code_open/vdata.csv", header = TRUE)
+vdat = read.csv("vdata.csv", header = TRUE)
 ## ---- prepare grand-mean data ----
 # Grand-mean data from individual participants
 # ...were stored in the data.frame 'msRepr'
@@ -46,11 +46,8 @@ mRepr <- msRepr %>% group_by(exp, duration) %>%
   setnames(., 'design','Design')
 
 
-
-
-
 # ---- load modeling data ----
-source('Bayesian_model_final_local.R')
+source('Bayesian_model_final.R')
 
 # extract and average data from model fittings
 # 'predictions' -Mix and 'predictions_block' - Block
@@ -64,6 +61,11 @@ predictions_block_mean <- predictions_block %>% group_by(exp,x) %>%
              y_rre = mean(y_rre), y_cv = mean(y_cv))%>%
   separate(.,exp,c('modality','design'),sep='/', remove = FALSE)
 
+# choose colours for plots
+myPairs <- brewer.pal(9, "Paired")[c(1,2,5,6)]
+myPairs.mix <- myPairs[c(2,4)]
+myPairs.block <- myPairs[c(1,3)]
+
 # ---- Figure 2: Mean RREs ---- ----
 # Relative Reproduction Errors(RREs)
 # Configuration of subplot titles
@@ -76,19 +78,20 @@ rre.labs <- as_labeller( c('Aud'='Audition', 'Vis'='Vision'))
 # ...grey solid dots represent ‘mixed’ conditions. 
 
 Figure2 <-
-  ggplot(mRepr, aes(x=duration, y = mRRE,color = Design))+
-  geom_point(size = 2) +
+  ggplot(mRepr, aes(x=duration, y = mRRE))+
+  geom_point(aes(alpha = Design),size = 2) +
+  scale_alpha_manual(values = c(0.4,1))+
   geom_errorbar(aes(ymin = mRRE-mseRRE, ymax = mRRE+mseRRE), width = 0.1) + 
-  scale_color_manual(values = c("grey43","black"))+
   scale_shape_manual(values = c(1,16))+ 
-  #Modeling data
-  geom_line(aes(x=x,y=y_rre), data = predictions_mean,color = "#E31A1C")+ 
+  # Modeling data
+  # Mix data
+  geom_line(aes(x=x,y=y_rre, color = modality), data = predictions_mean)+ 
   facet_wrap(~modality,nrow=1,labeller=rre.labs)+
-  # block data
-  geom_line(aes(x=x,y=y_rre),data=predictions_block_mean %>% filter(x>0.2&x<0.9),color = "#FB9A99",  size =0.5)+ 
-  geom_line(aes(x=x,y=y_rre),data=predictions_block_mean %>% filter(x>1&x<3.7), color = "#FB9A99", size =0.5)+ 
-  geom_line(aes(x=x,y=y_rre),data=predictions_block_mean %>% filter(x>5), color = "#FB9A99",  size =0.5)+ 
-  
+  scale_color_manual(values = myPairs[c(2,4)])+
+  # Block data
+  geom_line(aes(x=x,y=y_rre, color = modality),data=predictions_block_mean %>% filter(x>0.2&x<0.9), size =0.5, alpha = 0.6)+ 
+  geom_line(aes(x=x,y=y_rre, color = modality),data=predictions_block_mean %>% filter(x>1&x<3.7), size =0.5, alpha = 0.6)+ 
+  geom_line(aes(x=x,y=y_rre, color = modality),data=predictions_block_mean %>% filter(x>5),  size =0.5, alpha = 0.6)+ 
   scale_x_continuous(trans = "log10", limits = c(0.25,30),breaks = c(0.3, 1,5,16))+
   geom_abline(aes(intercept = 0, slope = 0),linetype = 9)+
   ylab("Relative Reproduction Error (RRE) (%)")+
@@ -96,7 +99,7 @@ Figure2 <-
   scale_y_continuous(labels = scales::percent, limits = c(-0.6,1),breaks = c(-0.5,0,0.5)) + 
   facet_wrap(~modality,nrow=1,labeller=rre.labs)+
   theme_minimal()+
-  theme(legend.position = c(0.15,0.85),
+  theme(legend.position = c(0.15,0.15),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         axis.line.x = element_line(color="black", size = 0.2),
@@ -109,22 +112,25 @@ cv.labs <- as_labeller( c('Aud'='Audition', 'Vis'='Vision'))
 
 # Figure 3 A
 figure3_cv <-
-  ggplot(data= mRepr, aes(x= duration, y = mCV, colour= Design))+  
-  #mean points
-  geom_point(size = 2)+
+  ggplot(data= mRepr, aes(x= duration, y = mCV))+  
+  # mean points
+  geom_point(aes(alpha = Design), size = 2)+
+  scale_alpha_manual(values = c(0.4,1))+
+  
   geom_errorbar(aes(ymin = mCV-seCV, ymax = mCV+seCV, 
-                    colour= Design), width = 0.1) + 
+                    alpha= Design), width = 0.1) + 
   scale_x_continuous(trans = "log10",breaks = c(0.3,1,2,5,10))+
   scale_y_continuous(limits = c(0.05,0.65))+
-  scale_color_manual(values = c("grey43","black"))+
   scale_shape_manual(values = c(1,16))+
   facet_rep_wrap(~modality, nrow = 1,labeller=cv.labs)+
   #Byesian model lines
-  geom_line(aes(x=x,y=y_cv),data=predictions_mean %>% filter(x>0.2), color = "#E31A1C")+ 
+  # Mix data
+  geom_line(aes(x=x,y=y_cv, color = modality),data=predictions_mean %>% filter(x>0.2))+ 
+  scale_color_manual(values = myPairs[c(2,4)], guide=FALSE)+
   # block data
-  geom_line(aes(x=x,y=y_cv),data=predictions_block_mean %>% filter(x>0.2&x<0.9), color = "#FB9A99",  size =0.5)+ 
-  geom_line(aes(x=x,y=y_cv),data=predictions_block_mean %>% filter(x>1&x<3.7), color = "#FB9A99", size =0.5)+ 
-  geom_line(aes(x=x,y=y_cv),data=predictions_block_mean %>% filter(x>5), color = "#FB9A99",  size =0.5)+ 
+  geom_line(aes(x=x,y=y_cv, color = modality),data=predictions_block_mean %>% filter(x>0.2&x<0.9),  size =0.5, alpha = 0.6)+ 
+  geom_line(aes(x=x,y=y_cv, color = modality),data=predictions_block_mean %>% filter(x>1&x<3.7), size =0.5, alpha = 0.6)+ 
+  geom_line(aes(x=x,y=y_cv, color = modality),data=predictions_block_mean %>% filter(x>5),size =0.5, alpha = 0.6)+ 
   xlab('Duartions (s)') +
   ylab('Coefficient of Variance (CV)')+
   theme_minimal()+
@@ -146,7 +152,6 @@ data_cv_mslope <- data_cv_slope %>%
             seslope = sd(slope)/sqrt(n())) %>%
   setnames(., "exp","Experiment")
 
-myPairs <- brewer.pal(9, "Paired")[c(6,2,5,1)]
 
 # Figure plot
 Fig_meanslopes <- ggplot(data_cv_mslope, aes(x =Experiment, y = mslope)) +
@@ -156,7 +161,7 @@ Fig_meanslopes <- ggplot(data_cv_mslope, aes(x =Experiment, y = mslope)) +
   
   scale_color_manual(values = myPairs)+
   scale_fill_manual(values = myPairs)+
-  
+  scale_y_continuous(labels = scales::percent_format(accuracy =0.01))+  
   geom_signif(comparisons = list(c("Vis/Mix","Vis/Block")),
               annotations = "*",
               y_position = 0.01) +  
@@ -176,7 +181,7 @@ Fig_meanslopes <- ggplot(data_cv_mslope, aes(x =Experiment, y = mslope)) +
   ylim(c(-0.05,0.025))+
   ylab('CV Slopes ')
 
-Fig_meanslopes_mid <- plot_grid(NULL,Fig_meanslopes, NULL, nrow =3,rel_widths = c(1,10,1))
+Fig_meanslopes_mid <- plot_grid(NULL,Fig_meanslopes, NULL, nrow =3,rel_heights = c(2,10,6))
 
 # Figure 3
 # panels A: Mean CVs (colored dots) as a function of the sample duration, 
@@ -188,5 +193,5 @@ Fig_meanslopes_mid <- plot_grid(NULL,Fig_meanslopes, NULL, nrow =3,rel_widths = 
 # Error bars indicate one standard error. 
 # The slope was obtained by estimating parameter b of the linear function CV = a + b(Duration)
 
-Figure3 <- plot_grid(Figure3_cv, Fig_meanslopes_mid, nrow =1,rel_widths = c(2,0.7), labels = c('A','B'))
+Figure3 <- plot_grid(figure3_cv, Fig_meanslopes_mid, nrow =1,rel_widths = c(2,0.7), labels = c('A','B'))
 

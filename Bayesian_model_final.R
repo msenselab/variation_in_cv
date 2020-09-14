@@ -15,9 +15,9 @@
 # This chunk of codes can also be found in the  'Main_Figure.R' with more detailed comments.
 # The repetition is included for the code to be run independently.
 
-source('Codes/loadPackages.R')
+source('loadPackages.R')
 # load data from 4 experiments  
-vdat = read.csv("Code_open/vdata.csv", header = TRUE)
+vdat = read.csv("vdata.csv", header = TRUE)
 # prepare grand-mean data
 
 msRepr <- vdat %>% group_by(exp, duration,sub) %>% 
