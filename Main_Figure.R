@@ -63,8 +63,6 @@ predictions_block_mean <- predictions_block %>% group_by(exp,x) %>%
 
 # choose colours for plots
 myPairs <- brewer.pal(9, "Paired")[c(1,2,5,6)]
-myPairs.mix <- myPairs[c(2,4)]
-myPairs.block <- myPairs[c(1,3)]
 
 # ---- Figure 2: Mean RREs ---- ----
 # Relative Reproduction Errors(RREs)
@@ -79,15 +77,15 @@ rre.labs <- as_labeller( c('Aud'='Audition', 'Vis'='Vision'))
 
 Figure2 <-
   ggplot(mRepr, aes(x=duration, y = mRRE))+
-  geom_point(aes(alpha = Design),size = 2) +
-  scale_alpha_manual(values = c(0.4,1))+
+  geom_point(aes(alpha = Design, shape = Design),size = 2) +
+  scale_alpha_manual(values = c(0.7,1))+
   geom_errorbar(aes(ymin = mRRE-mseRRE, ymax = mRRE+mseRRE), width = 0.1) + 
-  scale_shape_manual(values = c(1,16))+ 
+  scale_shape_manual(values = c(4,20))+ 
   # Modeling data
   # Mix data
-  geom_line(aes(x=x,y=y_rre, color = modality), data = predictions_mean)+ 
+  geom_line(aes(x=x,y=y_rre, color = modality), data = predictions_mean,linetype = "dashed")+ 
   facet_wrap(~modality,nrow=1,labeller=rre.labs)+
-  scale_color_manual(values = myPairs[c(2,4)])+
+  scale_color_manual(values = myPairs[c(2,4)], guide = FALSE)+
   # Block data
   geom_line(aes(x=x,y=y_rre, color = modality),data=predictions_block_mean %>% filter(x>0.2&x<0.9), size =0.5, alpha = 0.6)+ 
   geom_line(aes(x=x,y=y_rre, color = modality),data=predictions_block_mean %>% filter(x>1&x<3.7), size =0.5, alpha = 0.6)+ 
@@ -100,6 +98,7 @@ Figure2 <-
   facet_wrap(~modality,nrow=1,labeller=rre.labs)+
   theme_minimal()+
   theme(legend.position = c(0.15,0.15),
+        legend.title=element_blank(),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         axis.line.x = element_line(color="black", size = 0.2),
@@ -114,18 +113,18 @@ cv.labs <- as_labeller( c('Aud'='Audition', 'Vis'='Vision'))
 figure3_cv <-
   ggplot(data= mRepr, aes(x= duration, y = mCV))+  
   # mean points
-  geom_point(aes(alpha = Design), size = 2)+
-  scale_alpha_manual(values = c(0.4,1))+
+  geom_point(aes(alpha = Design, shape = Design), size = 2)+
+  scale_alpha_manual(values = c(0.7,1))+
   
   geom_errorbar(aes(ymin = mCV-seCV, ymax = mCV+seCV, 
                     alpha= Design), width = 0.1) + 
   scale_x_continuous(trans = "log10",breaks = c(0.3,1,2,5,10))+
   scale_y_continuous(limits = c(0.05,0.65))+
-  scale_shape_manual(values = c(1,16))+
+  scale_shape_manual(values = c(4,20))+
   facet_rep_wrap(~modality, nrow = 1,labeller=cv.labs)+
   #Byesian model lines
   # Mix data
-  geom_line(aes(x=x,y=y_cv, color = modality),data=predictions_mean %>% filter(x>0.2))+ 
+  geom_line(aes(x=x,y=y_cv, color = modality),data=predictions_mean %>% filter(x>0.2), linetype = "dashed")+ 
   scale_color_manual(values = myPairs[c(2,4)], guide=FALSE)+
   # block data
   geom_line(aes(x=x,y=y_cv, color = modality),data=predictions_block_mean %>% filter(x>0.2&x<0.9),  size =0.5, alpha = 0.6)+ 
@@ -173,7 +172,7 @@ Fig_meanslopes <- ggplot(data_cv_mslope, aes(x =Experiment, y = mslope)) +
         legend.title=element_blank(),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
-        axis.text.x=element_blank(),
+      #  axis.text.x=element_blank(),
         axis.line.x = element_line(color="black", size = 0.2),
         axis.line.y = element_line(color="black", size = 0.2),
         axis.ticks = element_line(color = "grey"))+
@@ -181,7 +180,7 @@ Fig_meanslopes <- ggplot(data_cv_mslope, aes(x =Experiment, y = mslope)) +
   ylim(c(-0.05,0.025))+
   ylab('CV Slopes ')
 
-Fig_meanslopes_mid <- plot_grid(NULL,Fig_meanslopes, NULL, nrow =3,rel_heights = c(2,10,6))
+Fig_meanslopes_mid <- plot_grid(NULL,Fig_meanslopes, NULL, nrow =3,rel_heights = c(2,5,1))
 
 # Figure 3
 # panels A: Mean CVs (colored dots) as a function of the sample duration, 
@@ -193,5 +192,5 @@ Fig_meanslopes_mid <- plot_grid(NULL,Fig_meanslopes, NULL, nrow =3,rel_heights =
 # Error bars indicate one standard error. 
 # The slope was obtained by estimating parameter b of the linear function CV = a + b(Duration)
 
-Figure3 <- plot_grid(figure3_cv, Fig_meanslopes_mid, nrow =1,rel_widths = c(2,0.7), labels = c('A','B'))
+Figure3 <- plot_grid(figure3_cv, Fig_meanslopes_mid, nrow =1,rel_widths = c(2,1), labels = c('A','B'))
 
