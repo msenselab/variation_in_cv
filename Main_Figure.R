@@ -185,3 +185,79 @@ Fig_meanslopes_mid <- plot_grid(NULL,Fig_meanslopes, NULL, nrow =3,rel_heights =
 
 Figure3 <- plot_grid(figure3_cv, Fig_meanslopes_mid, nrow =1,rel_widths = c(2,1), labels = c('A','B'))
 
+
+# ---- Figure 4 : model v.s. estimates ----
+## prepare data from modeling
+# 'Mix' conditions
+fit_para %>% group_by (exp) %>% 
+  summarize (mean_sig_p = mean(sig_p), sd_sig_p = sd(sig_p),
+             mean_sig_t = mean(sig_t), sd_sig_t = sd(sig_t),
+             mean_sig_m = mean(sig_m), sd_sig_m = sd(sig_m),
+             mean_w = mean(w), sd_w = sd(w),
+             mean_res1 = mean(res), sd_res1 = sd(res),
+             mean_res2 = mean(res2), sd_res2 = sd(res2)) -> para_mix_mean
+# 'Block' conditions
+fit_para_block %>% filter(model == top_mod) -> fit_para_block_top
+fit_para_block_top %>% group_by (exp) %>% 
+  summarize (mean_sig_p1 = mean(sig_p_short), sd_sig_p1 = sd(sig_p_short),
+             mean_sig_p2 = mean(sig_p_medium), sd_sig_p2 = sd(sig_p_medium),
+             mean_sig_p3 = mean(sig_p_long), sd_sig_p3 = sd(sig_p_long),
+             mean_sig_t = mean(sig_t_short), sd_sig_t1 = sd(sig_t_short),
+             mean_sig_r = mean(sig_m_short), sd_sig_r1 = sd(sig_m_short),
+             mean_w1 = mean(w_short), sd_w1 = sd(w_short),
+             mean_w2 = mean(w_medium), sd_w2 = sd(w_medium),
+             mean_w3 = mean(w_long), sd_w3 = sd(w_long),
+             mean_res1 = mean(res_short), sd_res1 = sd(res_short),
+             mean_res21 = mean(res2_short), sd_res21 = sd(res2_short),
+             mean_res22 = mean(res2_medium), sd_res22 = sd(res2_medium),
+             mean_res23 = mean(res2_long), sd_res23 = sd(res2_long),
+             mean_aic = mean(AIC), mean_bic = mean(BIC)) -> para_block_mean
+
+data_model_exp <- rbind(cv_model_mix, cv_model_block)
+data_model_exp$rre <- data_model_exp$rep_err/data_model_exp$duration
+
+data_model_exp_mean <- data_model_exp %>% group_by(exp,duration) %>%
+  summarize(n = n(), cv_se = sd(cv)/sqrt(n-1),cv = mean(cv), 
+            cv_model_se = sd(cv_model)/sqrt(n-1),cv_model = mean(cv_model),
+            rep_se = sd(rep)/sqrt(n-1),rep = mean(rep), 
+            rep_model_se = sd(rep_model)/sqrt(n-1), rep_model = mean(rep_model),
+            sd_se = sd(sd)/sqrt(n-1),sd = mean(sd), 
+            sd_model_se = sd(sd_model)/sqrt(n-1), sd_model = mean(sd_model),
+            rep_err_se = sd(rep_err)/sqrt(n-1),rep_err = mean(rep_err), 
+            rep_err_model_se = sd(rep_err_model)/sqrt(n-1), rep_err_model = mean(rep_err_model),
+            rre_se = sd(rre)/sqrt(n-1),rre = mean(rre),
+            rre_model_se = sd(rre_model)/sqrt(n-1),rre_model = mean(rre_model)
+  )
+
+Figure4 <- ggplot()+
+  geom_point(data=data_model_exp, aes(x=rre, y = rre_model),color = "grey")+
+  # add mean points
+  geom_point(data = data_model_exp_mean, aes(x= rre, y= rre_model),
+             size = 2, color = "Black", shape = 20)+
+  geom_errorbar(data = data_model_exp_mean,
+                aes(x= rre, ymin=rre_model - rre_model_se, 
+                    ymax= rre_model+ rre_model_se),
+                width= 0.05, color ="black")+
+  geom_errorbarh(data = data_model_exp_mean, 
+                 aes(y= rre_model, xmin=rre-rre_se, 
+                     xmax= rre + rre_se),
+                 height= 0.01,color = "black")+   
+  theme_minimal()+
+  theme(legend.position = "NULL",
+        legend.title=element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.line.x = element_line(color="black", size = 0.2),
+        axis.line.y = element_line(color="black", size = 0.2),
+        axis.ticks = element_line(color = "grey")
+  )+
+  xlab('RREs (%)')+
+  ylab('Predicted RREs (%)')+
+  scale_colour_manual(values = myPairs) +
+  scale_x_continuous(labels = scales::percent, limits = c(-1,1.5)) + 
+  scale_y_continuous(labels = scales::percent, limits = c(-1,1.5)) + 
+  # add diagonal lines
+  geom_abline(slope = 1, linetype = 'dashed')+
+  facet_wrap(~exp)
+
+

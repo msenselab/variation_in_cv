@@ -578,16 +578,14 @@ for(i in c(2,4)){
                              y_rre = (mu - x_block$m)/x_block$m, model = model, exp = exp_name[i], sub=s)
       predictions_block <- rbind2(predictions_block,data_temp)
       
-      while(model == 9){
-        dur_block <- rep(c(1:3),each =3)
+      if(model == 9){
+        dur_block <- rep(c(1:3), each=3)
         
         # extract 9 points of predicted CVs, save in 'cv_model_block'
-        
         pred_m_cv = Bayesian_mdur_block(log(dur), dur_block,
-                                        sig_p[dur_block], sig_t[dur_block], rep(0, length(dur_block))) 
+                                        sig_p[dur_block], sig_t[dur_block], res[dur_block]) 
         mu_cv = exp(pred_m_cv + res2[dur_block] + sig_tot[dur_block]^2/2)
         sigma_cv = sqrt(predicted_linear_scale_sd(pred_m_cv, Bayesian_vdur(sig_p[dur_block], sig_t[dur_block]))^2 + sig_m[dur_block]^2)
-        
         
         # add experimental data into the data frame
         data_model_mean <- data_model %>% group_by(exp, sub, duration)  %>% 
@@ -601,7 +599,7 @@ for(i in c(2,4)){
                              rre_model = (mu_cv-dur)/dur, sd_model =sigma_cv,
                              cv_model = sigma_cv/mu_cv)
         cv_model_block = rbind2(cv_model_block, cv_temp) 
-        model <-0 }
+      }
       
     }
   }
