@@ -53,8 +53,8 @@ data = msRepr
 
 # assign mean values according to the block number
 data$mean <- data$block
-data[data$design == 'Mix',]$mean <- M_p
-data[data$design == 'Block',]$mean  <- mean_block[data[data$design == 'Block',]$block]
+#data[data$design == 'Mix',]$mean <- M_p
+#data[data$design == 'Block',]$mean  <- mean_block[data[data$design == 'Block',]$block]
 
 data_m = data %>% 
   group_by(exp,duration) %>%
@@ -173,9 +173,9 @@ Bayesian_mixed_fit <- function(par, data) {
 # ---- Individual subject fits ----
 
 predictions <- data.frame()
-# add cv predictions(9 points) for comparison
-cv_model_mix <- data.frame()
 fit_para <- data.frame()
+cv_model_mix <- data.frame()
+
 for(i in c(1,3)){
   subs <- unique(filter(vdat, exp==exp_name[i])$sub)
   for(s in subs) {
@@ -187,8 +187,8 @@ for(i in c(1,3)){
     
     conv1 <- par$convergence
     
-    par <- optim(c(par$par,0.1), Bayesian_mixed_fit, NULL, method = "L-BFGS-B",
-                 lower = c(0.01,0.01,-10,0), upper = c(3,3,10,3),
+    par <- optim(c(par$par[1:2],0,0,0.1), Bayesian_mixed_fit, NULL, method = "L-BFGS-B",
+                 lower = c(0.01,0.01,-10,-10,0), upper = c(3,3,10,10,3),
                  data_model, control = c(maxit=10000))
     print(proc.time() - ptm)
     print(paste0(exp_name[i], ': sub=', s))
@@ -201,27 +201,25 @@ for(i in c(1,3)){
     sig_t <- par$par[2]
     w <- sig_p^2/(sig_p^2+sig_t^2)
     res <- par$par[3]
-    sig_m <- par$par[4]
+    res2 <- par$par[4]
+    sig_m <- par$par[5]
     sig_tot <- Bayesian_vdur(sig_p, sig_t)
     conv2 <- par$convergence
     
     fit_para <- rbind2(fit_para, data.frame(exp=exp_name[i], sub=s, sig_p=sig_p,
                                             sig_t=sig_t, sig_m=sig_m, w=w, sig_tot=sig_tot,
-                                            res=res, val=par$value, conv1=conv1, conv2=conv2))
-    mu = exp(Bayesian_mdur(log(x), c(sig_p, sig_t, res)) + sig_tot^2/2)
-    
+                                            res=res, res2=res2, val=par$value, conv1=conv1, conv2=conv2))
+    mu = exp(Bayesian_mdur(log(x), c(sig_p, sig_t, res)) + res2 + sig_tot^2/2)
     sigma = sqrt(predicted_linear_scale_sd(Bayesian_mdur(log(x), c(sig_p, sig_t, res)), 
                                            Bayesian_vdur(sig_p, sig_t))^2 + sig_m^2)
-    
     data_temp = data.frame(x=x, y_mdur = mu, 
                            y_vdur = sigma,
                            y_cv=sigma/mu,
                            y_rre = (mu - x)/x, exp = exp_name[i], sub=s)
-    
     predictions <- rbind2(predictions,data_temp)
-
+    
     # extract 9 points of predicted CVs, save in 'cv_model_mix'
-    mu_cv = exp(Bayesian_mdur(log(dur), c(sig_p, sig_t, res)) + sig_tot^2/2)
+    mu_cv = exp(Bayesian_mdur(log(dur), c(sig_p, sig_t, res)) + res2+ sig_tot^2/2)
     sigma_cv = sqrt(predicted_linear_scale_sd(Bayesian_mdur(log(dur), c(sig_p, sig_t, res)), 
                                               Bayesian_vdur(sig_p, sig_t))^2 + sig_m^2)    
     # add experimental data into the data frame
@@ -264,19 +262,15 @@ for(i in c(1,3)){
 # each block requires one mean value
 # ---- Build up 3-prior Models(Bayesian and linear) ----
 
-# Same as Bayesian_mdur except that the mean of the prior and the bias to the mean of the 
-# subjective prior (res) can differ between blocks
 Bayesian_mdur_block <- function(t, block, sig_p, sig_t, res) {
   
   sp2 <- sig_p^2
   st2 <- sig_t^2
-
+  
   y <- sp2/(sp2+st2)*t+st2/(sp2+st2)*(log(mean_block[block])+res[block])
   
 }
 
-# Same as the Bayesian_vdur for the mixed condition model. 
-# Repeated here so that the code for the blocked condition model can be run on its own.
 Bayesian_vdur <- function(sig_p, sig_t) {
   
   sp2 <- sig_p^2
@@ -289,17 +283,11 @@ Bayesian_vdur <- function(sig_p, sig_t) {
 # On log scale the model predicts constant SD. This function translates that into an SD on linear
 # scale, i.e. to the SD of the log-normal distribution 
 # (not the sigma parameter but the actual SD of the distibution).
-# Same as for the mixed condition model. 
-# Repeated here so that the code for the blocked condition model can be run on its own.
 predicted_linear_scale_sd <- function(mu, sigma) {
   s <- sqrt((exp(sigma^2)-1)*exp(2*mu+sigma^2))
 }
 
 # Fit a straight line in log-space to get good starting parameters for the full fit
-# The "model" parameter specificies which version of the model to run
-# Different versions differ in whether sig_p, sig_s, sig_m and res can differ between short, 
-# medium and long duration blocks as well as in whether the bias res is added as a shift of 
-# the mean of the prior, or later as a bias of the reproduction
 Bayesian_pre_fit_block <- function(par, model, data) {
   
   t <- log(data$duration)
@@ -309,8 +297,8 @@ Bayesian_pre_fit_block <- function(par, model, data) {
   sp_sep <- bitwAnd(model,1) # Separate sig_p for odd-numbered models
   st_sep <- bitwAnd(bitwShiftR(model,1),1) # Separate sig_t 
   res_sep <- bitwAnd(bitwShiftR(model,2),1) # Separate res 
-  outside_res <-bitwAnd(bitwShiftR(model,3),1)
-
+  res2_sep <-bitwAnd(bitwShiftR(model,3),1) # Separate res2
+  
   if(sp_sep) {
     sig_p <- par[1:3]
     par <- par[4:length(par)]
@@ -332,16 +320,12 @@ Bayesian_pre_fit_block <- function(par, model, data) {
   } else {
     res <- rep(par[1], 3)
   }
-    
+  
   sp <- sig_p[block]
   st <- sig_t[block]
-    
-  if(outside_res) {
-    m_pred <- Bayesian_mdur_block(t, block, sp, st, c(0,0,0)) + res[block]
-  } else {
-    m_pred <- Bayesian_mdur_block(t, block, sp, st, res)
-  }
+  
   v_pred <- Bayesian_vdur(sp, st)
+  m_pred <- Bayesian_mdur_block(t, block, sp, st, res) 
   
   a <- -sum(log(dnorm(y, m_pred, v_pred)))
   
@@ -354,7 +338,6 @@ Bayesian_pre_fit_block <- function(par, model, data) {
   return(a)
 }
 
-# Full model fit for the blocked condition
 Bayesian_mixed_fit_block <- function(par, model, data) {
   
   t <- log(data$duration)
@@ -364,8 +347,8 @@ Bayesian_mixed_fit_block <- function(par, model, data) {
   sp_sep <- bitwAnd(model,1) # Separate sig_p for odd-numbered models
   st_sep <- bitwAnd(bitwShiftR(model,1),1) # Separate sig_t 
   res_sep <- bitwAnd(bitwShiftR(model,2),1) # Separate res 
-  outside_res <-bitwAnd(bitwShiftR(model,3),1)
-  sm_sep <-  bitwAnd(bitwShiftR(model,4),1) # Separate res   
+  res2_sep <-bitwAnd(bitwShiftR(model,3),1) # Separate res2 
+  sm_sep <-  bitwAnd(bitwShiftR(model,4),1) # Separate sig_m 
   
   if(sp_sep) {
     sig_p <- par[1:3]
@@ -391,6 +374,14 @@ Bayesian_mixed_fit_block <- function(par, model, data) {
     par <- par[2:length(par)]
   }
   
+  if(res2_sep) {
+    res2 <- par[1:3]
+    par <- par[4:length(par)]
+  } else {
+    res2 <- rep(par[1], 3)
+    par <- par[2:length(par)]
+  }
+  
   if(sm_sep) {
     sig_m <- par[1:3]
   } else {
@@ -398,18 +389,9 @@ Bayesian_mixed_fit_block <- function(par, model, data) {
   }
   
   var_pred <- Bayesian_vdur(sig_p[block], sig_t[block])
-  if(outside_res) {
-    m_pred <- Bayesian_mdur_block(t, block, sig_p[block], sig_t[block], c(0,0,0))
-  } else {
-    m_pred <- Bayesian_mdur_block(t, block, sig_p[block], sig_t[block], res)
-  }
+  m_pred <- Bayesian_mdur_block(t, block, sig_p[block], sig_t[block], res)
   
-  if(outside_res) {
-    pred_m <- exp(m_pred + res[block] + var_pred^2/2)
-  } else {
-    pred_m <- exp(m_pred + var_pred^2/2) 
-  }
-  
+  pred_m <- exp(m_pred + res2[block] + var_pred^2/2) 
   pred_sd <- sqrt(predicted_linear_scale_sd(m_pred, var_pred)^2 + sig_m[block]^2)
   
   a <- -sum(log(dnorm(y, pred_m, pred_sd)))
@@ -439,8 +421,8 @@ for(i in c(2,4)){
       sp_sep <- bitwAnd(model,1) # Separate sig_p for odd-numbered models
       st_sep <- bitwAnd(bitwShiftR(model,1),1) # Separate sig_t 
       res_sep <- bitwAnd(bitwShiftR(model,2),1) # Separate res 
-      outside_res <-bitwAnd(bitwShiftR(model,3),1)
-      sm_sep <- bitwAnd(bitwShiftR(model,4),1) # Separate res   
+      res2_sep <-bitwAnd(bitwShiftR(model,3),1) # Separate res2 
+      sm_sep <- bitwAnd(bitwShiftR(model,4),1) # Separate sig_m 
       
       if(sp_sep) {
         start <- rep(0.6, 3)
@@ -486,12 +468,28 @@ for(i in c(2,4)){
         conv1=par$convergence
       }
       
+      if(res_sep) {
+        start <- c(par$par[1:(length(par$par)-3)], rep(0, 3))
+      } else {
+        start <- c(par$par[1:(length(par$par)-1)], 0)
+      }
+      
+      if(res2_sep) {
+        start <- c(start, rep(0, 3))
+        llim <- c(llim, rep(-10, 3))
+        ulim <- c(ulim, rep(10, 3))
+      } else  {
+        start <- c(start, rep(0, 1))
+        llim <- c(llim, rep(-10, 1))
+        ulim <- c(ulim, rep(10, 1))
+      } 
+      
       if(sm_sep) {
-        start <- c(par$par, rep(0.1, 3))
+        start <- c(start, rep(0.1, 3))
         llim <- c(llim, rep(0, 3))
         ulim <- c(ulim, rep(3, 3))
       } else  {
-        start <- c(par$par, rep(0.1, 1))
+        start <- c(start, rep(0.1, 1))
         llim <- c(llim, rep(0, 1))
         ulim <- c(ulim, rep(3, 1))
       } 
@@ -506,7 +504,7 @@ for(i in c(2,4)){
       print(par$value)
       print(par$convergence)
       print(par$message)
-    
+      
       conv2=par$convergence
       
       while(conv2>0) {
@@ -541,6 +539,14 @@ for(i in c(2,4)){
         p <- p[2:length(p)]
       }
       
+      if(res2_sep) {
+        res2 <- p[1:3]
+        p <- p[4:length(p)]
+      } else {
+        res2 <- rep(p[1], 3)
+        p <- p[2:length(p)]
+      }
+      
       if(sm_sep) {
         sig_m <- p[1:3]
       } else {
@@ -553,23 +559,18 @@ for(i in c(2,4)){
       fit_para_block <- rbind2(fit_para_block, data.frame(exp=exp_name[i], sub=s, model=model, sig_p_short=sig_p[1],
                                                           sig_p_medium=sig_p[2], sig_p_long=sig_p[3], sig_t_short=sig_t[1],
                                                           sig_t_medium=sig_t[2], sig_t_long=sig_t[3], sig_m_short=sig_m[1],
-                                                          sig_m_medium=sig_m[1], sig_m_long=sig_m[1], res_short=res[1],
-                                                          res_medium=res[2], res_long=res[3], w_short=w[1], w_medium=w[2], w_long=w[3], 
+                                                          sig_m_medium=sig_m[2], sig_m_long=sig_m[3], res_short=res[1],
+                                                          res_medium=res[2], res_long=res[3], res2_short=res2[1],
+                                                          res2_medium=res2[2], res2_long=res2[3], w_short=w[1], w_medium=w[2], w_long=w[3], 
                                                           sig_tot_short=sig_tot[1], sig_tot_medium=sig_tot[2], sig_tot_long=sig_tot[3],
                                                           val=par$value, npar=npar, AIC=2*(par$value+npar), BIC=2*par$value+npar*log(N),
                                                           conv1=conv1, conv2=conv2, sp_sep=sp_sep, st_sep=st_sep, sm_sep=sm_sep, 
-                                                          res_sep=res_sep, outside_res=outside_res))
-      if(outside_res) {
-        pred_m = Bayesian_mdur_block(log(x_block$m), x_block$block,
-                                     sig_p[x_block$block], sig_t[x_block$block], rep(0, length(x_block$block))) 
-        mu = exp(pred_m + res[x_block$block] + sig_tot[x_block$block]^2/2)
-        sigma = sqrt(predicted_linear_scale_sd(pred_m, Bayesian_vdur(sig_p[x_block$block], sig_t[x_block$block]))^2 + sig_m[x_block$block]^2)
-      } else {
-        pred_m = Bayesian_mdur_block(log(x_block$m), x_block$block,
-                                     sig_p[x_block$block], sig_t[x_block$block], res)
-        mu = exp(pred_m + sig_tot[x_block$block]^2/2)
-        sigma = sqrt(predicted_linear_scale_sd(pred_m, Bayesian_vdur(sig_p[x_block$block], sig_t[x_block$block]))^2 + sig_m[x_block$block]^2)
-      }
+                                                          res_sep=res_sep, res2_sep=res2_sep))
+      
+      pred_m = Bayesian_mdur_block(log(x_block$m), x_block$block,
+                                   sig_p[x_block$block], sig_t[x_block$block], res) 
+      mu = exp(pred_m + res2[x_block$block] + sig_tot[x_block$block]^2/2) 
+      sigma = sqrt(predicted_linear_scale_sd(pred_m, Bayesian_vdur(sig_p[x_block$block], sig_t[x_block$block]))^2 + sig_m[x_block$block]^2)
       
       data_temp = data.frame(x=x_block$m, y_mdur = mu, 
                              y_vdur = sigma,
@@ -577,14 +578,14 @@ for(i in c(2,4)){
                              y_rre = (mu - x_block$m)/x_block$m, model = model, exp = exp_name[i], sub=s)
       predictions_block <- rbind2(predictions_block,data_temp)
       
-      while(model ==13){
+      while(model == 9){
         dur_block <- rep(c(1:3),each =3)
         
         # extract 9 points of predicted CVs, save in 'cv_model_block'
         
         pred_m_cv = Bayesian_mdur_block(log(dur), dur_block,
                                         sig_p[dur_block], sig_t[dur_block], rep(0, length(dur_block))) 
-        mu_cv = exp(pred_m_cv + res[dur_block] + sig_tot[dur_block]^2/2)
+        mu_cv = exp(pred_m_cv + res2[dur_block] + sig_tot[dur_block]^2/2)
         sigma_cv = sqrt(predicted_linear_scale_sd(pred_m_cv, Bayesian_vdur(sig_p[dur_block], sig_t[dur_block]))^2 + sig_m[dur_block]^2)
         
         
@@ -602,23 +603,33 @@ for(i in c(2,4)){
         cv_model_block = rbind2(cv_model_block, cv_temp) 
         model <-0 }
       
-      
-      
     }
   }
 }
 
 pred_sep_block <-  predictions_block %>% group_by(exp, x, model) %>%
   summarize(y_mdur=mean(y_mdur), y_vdur=mean(y_vdur), y_cv=mean(y_cv), y_rre=mean(y_rre))
-fit_summary <- group_by(fit_para_block, model) %>% summarize(mBIC=mean(BIC)) %>% arrange(mBIC)
+fit_summary <- group_by(fit_para_block, model) %>% 
+  summarize(mBIC=mean(BIC), sp=mean(sp_sep),st=mean(st_sep), res=mean(res_sep), 
+            sm=mean(sm_sep), res2=mean(res2_sep)) %>% arrange(mBIC)
 top_mod <- fit_summary[1,]$model
 
-# Plot figures with data and model predictions 
 for(i in c(2,4)) {
   
   data_model = data %>% filter(exp == exp_name[i])
   pred_sep = pred_sep_block %>% filter(exp == exp_name[i], model==top_mod)
-
+  
   mean_data <- group_by(data_model, duration) %>% summarize(mcv=mean(cv))
   
 }
+
+
+for(i in c(2,4)) {
+  # Select all models in which zero or one parameter can vary between blocks
+  pred_sep = pred_sep_block %>% filter(model %in% c(0, 1, 2, 4, 8, 16, 32))
+  pred_sep$model <- factor(pred_sep$model, levels=c(0,1,2,4,8,16), 
+                           labels=c('all fixed', 'sig_p', 'sig_t', 'delta1', 'delta2', 'sig_m'))
+  
+  
+}
+

@@ -61,9 +61,6 @@ predictions_block_mean <- predictions_block %>% group_by(exp,x) %>%
              y_rre = mean(y_rre), y_cv = mean(y_cv))%>%
   separate(.,exp,c('modality','design'),sep='/', remove = FALSE)
 
-# choose colours for plots
-myPairs <- brewer.pal(9, "Paired")[c(1,2,5,6)]
-
 # ---- Figure 2: Mean RREs ---- ----
 # Relative Reproduction Errors(RREs)
 # Configuration of subplot titles
@@ -78,18 +75,18 @@ rre.labs <- as_labeller( c('Aud'='Audition', 'Vis'='Vision'))
 Figure2 <-
   ggplot(mRepr, aes(x=duration, y = mRRE))+
   geom_point(aes(alpha = Design, shape = Design),size = 2) +
-  scale_alpha_manual(values = c(0.7,1))+
+  scale_alpha_manual(values = c(0.4,1))+
   geom_errorbar(aes(ymin = mRRE-mseRRE, ymax = mRRE+mseRRE), width = 0.1) + 
   scale_shape_manual(values = c(4,20))+ 
   # Modeling data
   # Mix data
-  geom_line(aes(x=x,y=y_rre, color = modality), data = predictions_mean,linetype = "dashed")+ 
+  geom_line(aes(x=x,y=y_rre),  color = "black",data = predictions_mean,linetype = "dashed")+ 
   facet_wrap(~modality,nrow=1,labeller=rre.labs)+
-  scale_color_manual(values = myPairs[c(2,4)], guide = FALSE)+
+  #scale_color_manual(values = myPairs[c(2,4)], guide = FALSE)+
   # Block data
-  geom_line(aes(x=x,y=y_rre, color = modality),data=predictions_block_mean %>% filter(x>0.2&x<0.9), size =0.5, alpha = 0.6)+ 
-  geom_line(aes(x=x,y=y_rre, color = modality),data=predictions_block_mean %>% filter(x>1&x<3.7), size =0.5, alpha = 0.6)+ 
-  geom_line(aes(x=x,y=y_rre, color = modality),data=predictions_block_mean %>% filter(x>5),  size =0.5, alpha = 0.6)+ 
+  geom_line(aes(x=x,y=y_rre),data=predictions_block_mean %>% filter(x>0.2&x<0.9), size =0.5, alpha = 0.7)+ 
+  geom_line(aes(x=x,y=y_rre),data=predictions_block_mean %>% filter(x>1&x<3.7), size =0.5, alpha = 0.7)+ 
+  geom_line(aes(x=x,y=y_rre),data=predictions_block_mean %>% filter(x>5),  size =0.5, alpha = 0.7)+ 
   scale_x_continuous(trans = "log10", limits = c(0.25,30),breaks = c(0.3, 1,5,16))+
   geom_abline(aes(intercept = 0, slope = 0),linetype = 9)+
   ylab("Relative Reproduction Error (RRE) (%)")+
@@ -114,7 +111,7 @@ figure3_cv <-
   ggplot(data= mRepr, aes(x= duration, y = mCV))+  
   # mean points
   geom_point(aes(alpha = Design, shape = Design), size = 2)+
-  scale_alpha_manual(values = c(0.7,1))+
+  scale_alpha_manual(values = c(0.4,1))+
   
   geom_errorbar(aes(ymin = mCV-seCV, ymax = mCV+seCV, 
                     alpha= Design), width = 0.1) + 
@@ -124,12 +121,12 @@ figure3_cv <-
   facet_rep_wrap(~modality, nrow = 1,labeller=cv.labs)+
   #Byesian model lines
   # Mix data
-  geom_line(aes(x=x,y=y_cv, color = modality),data=predictions_mean %>% filter(x>0.2), linetype = "dashed")+ 
-  scale_color_manual(values = myPairs[c(2,4)], guide=FALSE)+
+  geom_line(aes(x=x,y=y_cv),data=predictions_mean %>% filter(x>0.2), linetype = "dashed")+ 
+  # scale_color_manual(values = myPairs[c(2,4)], guide=FALSE)+
   # block data
-  geom_line(aes(x=x,y=y_cv, color = modality),data=predictions_block_mean %>% filter(x>0.2&x<0.9),  size =0.5, alpha = 0.6)+ 
-  geom_line(aes(x=x,y=y_cv, color = modality),data=predictions_block_mean %>% filter(x>1&x<3.7), size =0.5, alpha = 0.6)+ 
-  geom_line(aes(x=x,y=y_cv, color = modality),data=predictions_block_mean %>% filter(x>5),size =0.5, alpha = 0.6)+ 
+  geom_line(aes(x=x,y=y_cv),data=predictions_block_mean %>% filter(x>0.2&x<0.9),  size =0.5, alpha = 0.6)+ 
+  geom_line(aes(x=x,y=y_cv),data=predictions_block_mean %>% filter(x>1&x<3.7), size =0.5, alpha = 0.6)+ 
+  geom_line(aes(x=x,y=y_cv),data=predictions_block_mean %>% filter(x>5),size =0.5, alpha = 0.6)+ 
   xlab('Duartions (s)') +
   ylab('Coefficient of Variance (CV)')+
   theme_minimal()+
@@ -155,24 +152,18 @@ data_cv_mslope <- data_cv_slope %>%
 # Figure plot
 Fig_meanslopes <- ggplot(data_cv_mslope, aes(x =Experiment, y = mslope)) +
   
-  geom_bar( stat = "identity",width = 0.6, aes(color = Experiment,fill = Experiment)) +
-  geom_errorbar(aes(ymin = mslope-seslope,ymax = 0,color = Experiment),width = 0.4)+
+  geom_bar( stat = "identity",width = 0.6, fill = "black") +
+  geom_text(aes(x= 'Vis/Mix', y = 0.005,label = "**")) +
   
-  scale_color_manual(values = myPairs)+
-  scale_fill_manual(values = myPairs)+
+  geom_errorbar(aes(ymin = mslope-seslope,ymax = 0),width = 0.4)+
   scale_y_continuous(labels = scales::percent_format(accuracy =0.01))+  
-  geom_signif(comparisons = list(c("Vis/Mix","Vis/Block")),
-              annotations = "*",
-              y_position = 0.01) +  
-  geom_signif(comparisons = list(c("Vis/Mix","Aud/Mix")),
-              annotations = "*",
-              y_position = 0.02) +
   theme_minimal()+
+  
   theme(legend.position = "null",
         legend.title=element_blank(),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
-      #  axis.text.x=element_blank(),
+        #  axis.text.x=element_blank(),
         axis.line.x = element_line(color="black", size = 0.2),
         axis.line.y = element_line(color="black", size = 0.2),
         axis.ticks = element_line(color = "grey"))+
