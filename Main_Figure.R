@@ -127,7 +127,7 @@ figure3_cv <-
   geom_line(aes(x=x,y=y_cv),data=predictions_block_mean %>% filter(x>0.2&x<0.9),  size =0.5, alpha = 0.6)+ 
   geom_line(aes(x=x,y=y_cv),data=predictions_block_mean %>% filter(x>1&x<3.7), size =0.5, alpha = 0.6)+ 
   geom_line(aes(x=x,y=y_cv),data=predictions_block_mean %>% filter(x>5),size =0.5, alpha = 0.6)+ 
-  xlab('Duartions (s)') +
+  xlab('Durations (s)') +
   ylab('Coefficient of Variance (CV)')+
   theme_minimal()+
   theme(legend.position = c(0.15,0.85),
