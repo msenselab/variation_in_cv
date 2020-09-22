@@ -152,12 +152,13 @@ Bayesian_mixed_fit <- function(par, data) {
   sig_p <- par[1]
   sig_t <- par[2]
   res <- par[3]
+  res2 <- par[4]
   
   var_pred <- Bayesian_vdur(sig_p, sig_t)
   m_pred <- Bayesian_mdur(t, c(sig_p, sig_t, res))
-  sig_m <- par[4]
-
-  pred_m <- exp(m_pred + var_pred^2/2)
+  sig_m <- par[5]
+  
+  pred_m <- exp(m_pred + res2 + var_pred^2/2) 
   pred_sd <- sqrt(predicted_linear_scale_sd(m_pred, var_pred)^2 + sig_m^2)
   
   a <- -sum(log(dnorm(y, pred_m, pred_sd)))

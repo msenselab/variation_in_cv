@@ -56,7 +56,7 @@ predictions_mean <- predictions %>% group_by(exp,x) %>%
              y_rre = mean(y_rre), y_cv = mean(y_cv))%>%
   separate(.,exp,c('modality','design'),sep='/', remove = FALSE)
 
-predictions_block_mean <- predictions_block %>% group_by(exp,x) %>%
+predictions_block_mean <- predictions_block %>% filter(model==top_mod) %>% group_by(exp,x) %>%
   summarize (y_mdur = mean(y_mdur), y_vdur = mean(y_vdur),
              y_rre = mean(y_rre), y_cv = mean(y_cv))%>%
   separate(.,exp,c('modality','design'),sep='/', remove = FALSE)
