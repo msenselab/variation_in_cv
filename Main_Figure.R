@@ -253,7 +253,6 @@ Figure4 <- ggplot()+
   )+
   xlab('RREs (%)')+
   ylab('Predicted RREs (%)')+
-  scale_colour_manual(values = myPairs) +
   scale_x_continuous(labels = scales::percent, limits = c(-1,1.5)) + 
   scale_y_continuous(labels = scales::percent, limits = c(-1,1.5)) + 
   # add diagonal lines
