@@ -75,8 +75,8 @@ rre.labs <- as_labeller( c('Aud'='Audition', 'Vis'='Vision'))
 Figure2 <-
   ggplot(mRepr, aes(x=duration, y = mRRE))+
   geom_point(aes(alpha = Design, shape = Design),size = 2) +
-  scale_alpha_manual(values = c(0.4,1))+
-  geom_errorbar(aes(ymin = mRRE-mseRRE, ymax = mRRE+mseRRE), width = 0.1) + 
+  scale_alpha_manual(values = c(0.5,1))+
+  geom_errorbar(aes(ymin = mRRE-mseRRE, ymax = mRRE+mseRRE, alpha = Design), width = 0.1) + 
   scale_shape_manual(values = c(4,20))+ 
   # Modeling data
   # Mix data
@@ -87,7 +87,11 @@ Figure2 <-
   geom_line(aes(x=x,y=y_rre),data=predictions_block_mean %>% filter(x>0.2&x<0.9), size =0.5, alpha = 0.7)+ 
   geom_line(aes(x=x,y=y_rre),data=predictions_block_mean %>% filter(x>1&x<3.7), size =0.5, alpha = 0.7)+ 
   geom_line(aes(x=x,y=y_rre),data=predictions_block_mean %>% filter(x>5),  size =0.5, alpha = 0.7)+ 
-  scale_x_continuous(trans = "log10", limits = c(0.25,30),breaks = c(0.3, 1,5,16))+
+  scale_x_continuous(trans = "log10", limits = c(0.25,30),breaks = c(1,10),
+                     labels = trans_format("log10", math_format(10^.x)))+
+  #scale_x_log10("y",
+  #              breaks = trans_breaks("log10", function(x) 10^x),
+    #            labels = trans_format("log10", math_format(10^.x)))
   geom_abline(aes(intercept = 0, slope = 0),linetype = 9)+
   ylab("Relative Reproduction Error (RRE) (%)")+
   xlab("Durations (s)")+
@@ -102,6 +106,7 @@ Figure2 <-
         axis.line.y = element_line(color="black", size = 0.2),
         axis.ticks = element_line(color = "grey")) 
 
+ggsave('fig2.pdf', Figure2, width = 7, height = 3)
 # ---- Figure 3 : CVs ----
 # configurations of the subplot titles
 cv.labs <- as_labeller( c('Aud'='Audition', 'Vis'='Vision'))
@@ -111,12 +116,12 @@ figure3_cv <-
   ggplot(data= mRepr, aes(x= duration, y = mCV))+  
   # mean points
   geom_point(aes(alpha = Design, shape = Design), size = 2)+
-  scale_alpha_manual(values = c(0.4,1))+
-  
+  scale_alpha_manual(values = c(0.5,1))+
   geom_errorbar(aes(ymin = mCV-seCV, ymax = mCV+seCV, 
                     alpha= Design), width = 0.1) + 
-  scale_x_continuous(trans = "log10",breaks = c(0.3,1,2,5,10))+
-  scale_y_continuous(limits = c(0.05,0.65))+
+  scale_x_continuous(trans = "log10", limits = c(0.25,30),breaks = c(1,10),
+                     labels = trans_format("log10", math_format(10^.x)))+
+  scale_y_continuous(limits = c(0.08,0.55))+
   scale_shape_manual(values = c(4,20))+
   facet_rep_wrap(~modality, nrow = 1,labeller=cv.labs)+
   #Byesian model lines
@@ -138,6 +143,7 @@ figure3_cv <-
         axis.line.y = element_line(color="black", size = 0.2),
         axis.ticks = element_line(color = "grey")
   )
+
 
 # Figure 3 B
 # prepare dataset
@@ -184,7 +190,7 @@ Fig_meanslopes_mid <- plot_grid(NULL,Fig_meanslopes, NULL, nrow =3,rel_heights =
 # The slope was obtained by estimating parameter b of the linear function CV = a + b(Duration)
 
 Figure3 <- plot_grid(figure3_cv, Fig_meanslopes_mid, nrow =1,rel_widths = c(2,1), labels = c('A','B'))
-
+ggsave('fig3.pdf', Figure3, width = 9, height = 3)
 
 # ---- Figure 4 : model v.s. estimates ----
 ## prepare data from modeling
