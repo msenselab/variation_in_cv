@@ -84,9 +84,9 @@ Figure2 <-
   facet_wrap(~modality,nrow=1,labeller=rre.labs)+
   #scale_color_manual(values = myPairs[c(2,4)], guide = FALSE)+
   # Block data
-  geom_line(aes(x=x,y=y_rre),data=predictions_block_mean %>% filter(x>0.2&x<0.9), size =0.5, alpha = 0.7)+ 
-  geom_line(aes(x=x,y=y_rre),data=predictions_block_mean %>% filter(x>1&x<3.7), size =0.5, alpha = 0.7)+ 
-  geom_line(aes(x=x,y=y_rre),data=predictions_block_mean %>% filter(x>5),  size =0.5, alpha = 0.7)+ 
+  geom_line(aes(x=x,y=y_rre),data=predictions_block_mean %>% filter(x>0.2&x<0.9), size =0.5, alpha = 0.5)+ 
+  geom_line(aes(x=x,y=y_rre),data=predictions_block_mean %>% filter(x>1&x<3.7), size =0.5, alpha = 0.5)+ 
+  geom_line(aes(x=x,y=y_rre),data=predictions_block_mean %>% filter(x>5),  size =0.5, alpha = 0.5)+ 
   scale_x_continuous(trans = "log10", limits = c(0.25,30),breaks = c(1,10),
                      labels = trans_format("log10", math_format(10^.x)))+
   #scale_x_log10("y",
@@ -129,9 +129,9 @@ figure3_cv <-
   geom_line(aes(x=x,y=y_cv),data=predictions_mean %>% filter(x>0.2), linetype = "dashed")+ 
   # scale_color_manual(values = myPairs[c(2,4)], guide=FALSE)+
   # block data
-  geom_line(aes(x=x,y=y_cv),data=predictions_block_mean %>% filter(x>0.2&x<0.9),  size =0.5, alpha = 0.6)+ 
-  geom_line(aes(x=x,y=y_cv),data=predictions_block_mean %>% filter(x>1&x<3.7), size =0.5, alpha = 0.6)+ 
-  geom_line(aes(x=x,y=y_cv),data=predictions_block_mean %>% filter(x>5),size =0.5, alpha = 0.6)+ 
+  geom_line(aes(x=x,y=y_cv),data=predictions_block_mean %>% filter(x>0.2&x<0.9),  size =0.5, alpha = 0.5)+ 
+  geom_line(aes(x=x,y=y_cv),data=predictions_block_mean %>% filter(x>1&x<3.7), size =0.5, alpha = 0.5)+ 
+  geom_line(aes(x=x,y=y_cv),data=predictions_block_mean %>% filter(x>5),size =0.5, alpha = 0.5)+ 
   xlab('Durations (s)') +
   ylab('Coefficient of Variance (CV)')+
   theme_minimal()+
