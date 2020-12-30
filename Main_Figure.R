@@ -161,7 +161,7 @@ Fig_meanslopes <- ggplot(data_cv_mslope, aes(x =Experiment, y = mslope)) +
   geom_bar( stat = "identity",width = 0.6, fill = "black") +
   geom_text(aes(x= 'Vis/Mix', y = 0.005,label = "**")) +
   
-  geom_errorbar(aes(ymin = mslope-seslope,ymax = 0),width = 0.4)+
+  geom_errorbar(aes(ymin = mslope-seslope,ymax = 0),width = 0.2)+
   scale_y_continuous(labels = scales::percent_format(accuracy =0.01))+  
   theme_minimal()+
   
@@ -172,7 +172,8 @@ Fig_meanslopes <- ggplot(data_cv_mslope, aes(x =Experiment, y = mslope)) +
         #  axis.text.x=element_blank(),
         axis.line.x = element_line(color="black", size = 0.2),
         axis.line.y = element_line(color="black", size = 0.2),
-        axis.ticks = element_line(color = "grey"))+
+        axis.ticks = element_line(color = "grey"),
+        axis.text.x = element_text(angle = -45, hjust = 0))+
   xlab('Conditions') +
   ylim(c(-0.05,0.025))+
   ylab('CV Slopes ')
@@ -190,7 +191,7 @@ Fig_meanslopes_mid <- plot_grid(NULL,Fig_meanslopes, NULL, nrow =3,rel_heights =
 # The slope was obtained by estimating parameter b of the linear function CV = a + b(Duration)
 
 Figure3 <- plot_grid(figure3_cv, Fig_meanslopes_mid, nrow =1,rel_widths = c(2,1), labels = c('A','B'))
-ggsave('figures/fig3.pdf', Figure3, width = 10, height = 3.5)
+ggsave('figures/fig3.pdf', Figure3, width = 7, height = 3.5)
 
 # ---- Figure 4 : model v.s. estimates ----
 ## prepare data from modeling
@@ -255,15 +256,16 @@ Figure4 <- ggplot()+
         panel.grid.minor = element_blank(),
         axis.line.x = element_line(color="black", size = 0.2),
         axis.line.y = element_line(color="black", size = 0.2),
-        axis.ticks = element_line(color = "grey")
+        axis.ticks = element_line(color = "grey"),
+        panel.spacing = unit(1,'lines')
   )+
-  xlab('RREs (%)')+
-  ylab('Predicted RREs (%)')+
+  xlab('RRE')+
+  ylab('Predicted RRE')+
   scale_x_continuous(labels = scales::percent, limits = c(-1,1.5)) + 
   scale_y_continuous(labels = scales::percent, limits = c(-1,1.5)) + 
   # add diagonal lines
   geom_abline(slope = 1, linetype = 'dashed')+
   facet_wrap(~exp)
-ggsave('figures/fig4.pdf', Figure3, width = 5, height = 5)
+ggsave('figures/fig4.pdf', Figure4, width = 6, height = 6)
 
 
