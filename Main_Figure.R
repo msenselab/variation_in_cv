@@ -190,7 +190,7 @@ Fig_meanslopes_mid <- plot_grid(NULL,Fig_meanslopes, NULL, nrow =3,rel_heights =
 # The slope was obtained by estimating parameter b of the linear function CV = a + b(Duration)
 
 Figure3 <- plot_grid(figure3_cv, Fig_meanslopes_mid, nrow =1,rel_widths = c(2,1), labels = c('A','B'))
-ggsave('figures/fig3.pdf', Figure3, width = 7, height = 3.5)
+ggsave('figures/fig3.pdf', Figure3, width = 10, height = 3.5)
 
 # ---- Figure 4 : model v.s. estimates ----
 ## prepare data from modeling
