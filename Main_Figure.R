@@ -106,7 +106,7 @@ Figure2 <-
         axis.line.y = element_line(color="black", size = 0.2),
         axis.ticks = element_line(color = "grey")) 
 
-ggsave('fig2.pdf', Figure2, width = 7, height = 3)
+ggsave('figures/fig2.pdf', Figure2, width = 7, height = 3.5)
 # ---- Figure 3 : CVs ----
 # configurations of the subplot titles
 cv.labs <- as_labeller( c('Aud'='Audition', 'Vis'='Vision'))
@@ -190,7 +190,7 @@ Fig_meanslopes_mid <- plot_grid(NULL,Fig_meanslopes, NULL, nrow =3,rel_heights =
 # The slope was obtained by estimating parameter b of the linear function CV = a + b(Duration)
 
 Figure3 <- plot_grid(figure3_cv, Fig_meanslopes_mid, nrow =1,rel_widths = c(2,1), labels = c('A','B'))
-ggsave('fig3.pdf', Figure3, width = 9, height = 3)
+ggsave('figures/fig3.pdf', Figure3, width = 7, height = 3.5)
 
 # ---- Figure 4 : model v.s. estimates ----
 ## prepare data from modeling
@@ -264,5 +264,6 @@ Figure4 <- ggplot()+
   # add diagonal lines
   geom_abline(slope = 1, linetype = 'dashed')+
   facet_wrap(~exp)
+ggsave('figures/fig4.pdf', Figure3, width = 5, height = 5)
 
 
